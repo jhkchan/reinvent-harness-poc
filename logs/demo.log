@@ -1,0 +1,66 @@
+reinvent-harness-poc demo  (ComplyKit-derived governance rails)
+profile=voteetech region=us-east-1 model=us.amazon.nova-micro-v1:0
+workdir: /var/folders/_b/8z14fb3j7sg4csvcb_gr2yx40000gn/T/harness-demo-hsx_nyvr
+
+==========================================================================
+RAIL 1: DURABLE + RESUMABLE PIPELINE (kill mid-run, resume, skip done)
+==========================================================================
+  attempt 1: running pipeline (assessor will crash)...
+    status='failed'  completed=['1_reader', '2_mapper']
+    error_message='RuntimeError: simulated worker crash (SIGKILL) during assessor'
+  attempt 2: /retry -> resume same run_id (completed phases skipped)...
+    status='completed'  completed=['1_reader', '2_mapper', '3_assessor', '5_reviewer']
+    phases SKIPPED on resume (already done): ['1_reader', '2_mapper']
+  PROOF: reader+mapper ran once, were checkpointed, and were skipped on resume. OK
+  sweeper: forcing a stalled in_progress run to a terminal state...
+    reaped run_ids: ['423f8ef21631']
+    reaped status: 'failed'  ('Pipeline stalled -- worker may have crashed (exceeded 330s)')
+  PROOF: no run can hang in 'in_progress' forever. OK
+
+==========================================================================
+RAIL 2: IMMUTABLE AUDIT TRAIL (replay one analysis; detect tampering)
+==========================================================================
+  audit entries for tenant tenant-a-bochk: 11
+    seq= 0 pipeline_started     actor=pipeline:0a07bf34967f  hash=f8daca1094
+    seq= 1 phase_transition     actor=pipeline:0a07bf34967f  hash=f181f60694
+    seq= 2 phase_transition     actor=pipeline:0a07bf34967f  hash=c39fc77d6e
+    seq= 3 pipeline_failed      actor=pipeline:0a07bf34967f  hash=51db588cf7
+    seq= 4 pipeline_resumed     actor=pipeline:0a07bf34967f  hash=965ee21a39
+    seq= 5 phase_transition     actor=pipeline:0a07bf34967f  hash=df1c8d26bf
+    seq= 6 phase_transition     actor=pipeline:0a07bf34967f  hash=8dc270a3ab
+    seq= 7 phase_transition     actor=pipeline:0a07bf34967f  hash=aa10d725f2
+    ... (+3 more)
+  chain verification: ok=True checked=11 (chain intact)
+  simulating tampering on a re-loaded copy (edit a past entry)...
+  re-verify tampered copy: ok=False (entry_hash mismatch at seq 1)
+  PROOF: any edit to a past entry breaks the hash chain. OK
+
+==========================================================================
+RAIL 3: MCP-TOOL SECURITY  +  RAIL 4: PER-TENANT ISOLATION
+==========================================================================
+  compliance MCP surface: 17 whitelisted tools
+  (3a) tenant A -> get_gap_analysis_summary on its OWN analysis: ALLOW [permission-gate:tool-config]
+  (3b) tenant A -> 'drop_all_tables' (NOT in MCP surface): DENY [tool-whitelist]  -- tool 'drop_all_tables' is not in the compliance MCP surface
+  (4a) tenant B -> get_gap_analysis_summary on tenant A's analysis: DENY [cross-tenant]  -- tenant 'tenant-b-rival' may not access a resource owned by tenant 'tenant-a-bochk'
+  (4b) no tenant id -> DENY [require-tenant-id]  -- X-Tenant-Id required but missing (GAP_ANALYSIS_REQUIRE_TENANT_ID)
+  PROOF: off-surface tools, cross-tenant access, and missing tenant all DENIED. OK
+
+==========================================================================
+RAIL 5: RACI GATE (matrix lookup HIT + Bedrock judge fallback on MISS)
+==========================================================================
+  (5a) matrix HIT  : control_area='capital adequacy' R=Head of Finance(matrix) A=Chief Risk Officer(matrix) matrix_hit=True llm_fallback=False
+  (5b) matrix MISS : control_area='cybersecurity incident response' R=Head of Operations(llm_fallback) A=Compliance Officer(llm_fallback) matrix_hit=False llm_fallback=True
+       judge picked R=Head of Operations (source=llm_fallback) reason='The Head of Operations is responsible for executing the cybersecurity '
+  PROOF: matrix decided 5a deterministically; Bedrock judge filled 5b. OK
+
+==========================================================================
+SUMMARY
+==========================================================================
+  RAIL 1 durable/resumable : crash -> retry skipped done phases; sweeper reaped a stall
+  RAIL 2 immutable audit   : hash chain verified intact; tamper detected
+  RAIL 3 MCP-tool security : off-surface tool DENIED (whitelist)
+  RAIL 4 per-tenant isolat.: tenant B DENIED from tenant A's analysis
+  RAIL 5 RACI gate         : matrix HIT (deterministic) + judge fallback on MISS
+  audit chain: ok=True entries=15
+
+DEMO OK

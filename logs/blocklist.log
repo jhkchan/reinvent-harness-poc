@@ -1,0 +1,11 @@
+# Fail-closed, blocklist-first permission gate: deny beats a broad allow
+
+  run_bash 'rm -rf /'                         -> DENY  [blocklist]  matched dangerous pattern 'rm_rf_root_home_glob'
+  run_bash 'mkfs.ext4 /dev/sda1'              -> DENY  [blocklist]  matched dangerous pattern 'mkfs'
+  run_bash 'dd if=/dev/zero of=/dev/sda'      -> DENY  [blocklist]  matched dangerous pattern 'dd_to_disk'
+  run_bash ':(){ :|:& };:'                    -> DENY  [blocklist]  matched dangerous pattern 'fork_bomb'
+  run_bash 'chmod -R 777 /'                   -> DENY  [blocklist]  matched dangerous pattern 'chmod_777_root'
+
+  run_bash 'ls -la'                           -> ALLOW [glob-override]  allowed by policy
+
+  write_file hiding 'rm -rf /' in content -> DENY [blocklist]

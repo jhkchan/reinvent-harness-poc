@@ -1,0 +1,16 @@
+# AWS resource cleanup check (account 805654041896, us-east-1)
+# This POC calls Bedrock converse ON-DEMAND only -- it provisions nothing.
+# Local checkpoints + audit JSONL are written to an OS temp dir, never to AWS.
+
+{
+  "bedrock_provisioned_throughputs": 0,
+  "bedrock_customization_jobs": 0,
+  "s3_buckets_total_in_account": 62,
+  "s3_buckets_created_by_this_poc": [],
+  "stepfunctions_state_machines_created_by_this_poc": [],
+  "glue_jobs": 0,
+  "dynamodb_tables_created_by_this_poc": [],
+  "sqs_queues": 0
+}
+
+RESULT: zero AWS resources were created or left behind by this POC.
