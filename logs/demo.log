@@ -1,0 +1,90 @@
+reinvent-harness-poc demo  (seven rails for a regulated agent)
+region=us-east-1 model=us.amazon.nova-micro-v1:0 credentials=default chain
+workdir: <tmp>/harness-demo-f087ovdn
+
+==========================================================================
+RAIL 1 BIT: permission gate (deny beats a broad allow)
+==========================================================================
+  run_bash 'rm -rf /'   -> DENY  [blocklist] matched dangerous pattern 'rm_rf_root_home_glob'
+  run_bash 'ls -la'     -> ALLOW [glob-override] allowed by policy
+  PROOF: the blocklist wins over a '*: allow' override. OK
+
+==========================================================================
+RAIL 2 BLINKERS: tool and tenant scope
+==========================================================================
+  review tool surface: 8 tools
+  (2a) tenant A -> get_review on its OWN review: ALLOW [permission-gate:tool-config]
+  (2b) tenant B -> get_review on tenant A's review: DENY [cross-tenant]  -- resource not found or not permitted
+  (2c) no tenant id -> DENY [require-tenant-id]  -- tenant id required but missing
+  (2d) tenant A -> 'drop_all_tables' (off the surface): DENY [tool-allowlist]
+  (2e) tenant A -> get_review on an unknown id: DENY [cross-tenant]  -- resource not found or not permitted
+  PROOF: cross-tenant, unknown id, missing tenant and off-surface tools all DENIED. OK
+
+==========================================================================
+RAIL 3 REINS: RACI matrix, named approval, judge fallback on MISS
+==========================================================================
+  (3a) matrix HIT  : control_area='capital adequacy' R=Head of Finance(matrix) A=Chief Risk Officer(matrix) matrix_hit=True llm_fallback=False
+  (3a) approval by b-fin : approved=False (only Chief Risk Officer (the Accountable) can approve)
+  (3a) approval by b-risk: approved=True (approved by Chief Risk Officer (matrix))
+  (3b) matrix MISS : control_area='cybersecurity incident response' R=Head of Operations(llm_fallback) A=Compliance Officer(llm_fallback) matrix_hit=False llm_fallback=True [A NEEDS CONFIRMATION]
+       judge picked A=Compliance Officer (source=llm_fallback) reason='The Compliance Officer is accountable for ensuring the incident respon'
+       the LLM never approves: ACT-2 waits for Compliance Officer's own sign-off.
+  PROOF: the matrix decided 3a and only its named Accountable could approve; the judge's pick for 3b is flagged and provisional. OK
+
+==========================================================================
+RAIL 4 HOOFPRINTS: replay the audit trail; detect tampering
+==========================================================================
+  audit entries for tenant tenant-a-bank: 7 of 8 (the gaps in seq are tenant B's entries)
+    seq= 0 tool_call       actor=agent:tenantA  hash=a6c4597aee
+    seq= 1 tool_call       actor=agent:tenantA  hash=2ecd477fad
+    seq= 2 tool_call       actor=agent:tenantA  hash=3e53bd4c59
+    seq= 4 raci_assigned   actor=raci_gate      hash=4e502ac86e
+    seq= 5 approval_recorded actor=b-fin          hash=4c3bfb97d2
+    seq= 6 approval_recorded actor=b-risk         hash=24beaab25b
+    seq= 7 raci_assigned   actor=raci_gate      hash=e947a2cae8
+  chain verification: ok=True checked=8 (chain intact)
+  re-verify a copy with one past entry edited: ok=False (entry_hash mismatch at seq 1)
+  drop the newest entry: walk ok=True; against the anchor ok=False (anchor mismatch at seq 7)
+  PROOF: an edit breaks the chain; a dropped tail needs the anchor, and the anchor catches it. OK
+
+==========================================================================
+RAIL 5 GROUND-DRIVING: hard checks block before any model call
+==========================================================================
+  candidate 'deploy into account 123456789012 now' -> BLOCKED at hard-checks: contains a 12-digit value that looks like an AWS account id (judged=False)
+  PROOF: the hard check failed closed with no model call. OK
+
+==========================================================================
+RAIL 6 STALL: isolated runtime (live run is separate)
+==========================================================================
+  harness/sandbox.py runs AI-written code in an AWS Lambda MicroVM
+  and tears it down. It creates real resources, so it is not part
+  of this demo: run `make sandbox-live` (see logs/sandbox.log).
+
+==========================================================================
+RAIL 7 BREECHING: crash + resume, kill switch, sweeper
+==========================================================================
+  attempt 1: running pipeline (assessor will crash)...
+    status='failed'  completed=['1_reader', '2_mapper']
+    error_message='RuntimeError: simulated worker crash during assessor'
+  attempt 2: retry -> resume the same run_id...
+    status='completed'  completed=['1_reader', '2_mapper', '3_assessor', '4_reviewer']
+    phases SKIPPED on resume (already done): ['1_reader', '2_mapper']
+  kill switch: a human pulls the brake after the first phase...
+    status='failed'  completed=['1_reader']  error_message='kill switch pulled'
+  sweeper: forcing a stalled in_progress run to a terminal state...
+    reaped 1 run; status='failed'
+  PROOF: resume skips done work; the brake and the sweeper both stop runs fail-closed. OK
+
+==========================================================================
+SUMMARY
+==========================================================================
+  RAIL 1 bit            : destructive command DENIED under '*: allow'
+  RAIL 2 blinkers       : cross-tenant, unknown id, no-tenant, off-surface DENIED
+  RAIL 3 reins          : only the named Accountable approves; judge picks are flagged
+  RAIL 4 hoofprints     : chain verified; edit and dropped tail detected
+  RAIL 5 ground-driving : hard check blocked with no model call
+  RAIL 6 stall          : see `make sandbox-live` / logs/sandbox.log
+  RAIL 7 breeching      : resume, kill switch and sweeper all fail closed
+  audit chain: ok=True entries=22
+
+DEMO OK

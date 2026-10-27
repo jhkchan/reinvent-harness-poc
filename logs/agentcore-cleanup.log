@@ -1,0 +1,11 @@
+[2026-10-30T16:31:41Z] cleanup_check() region=us-east-1 after run 2e16022719
+[2026-10-30T16:31:42Z] [cleanup-check] harnesses named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] agent_runtimes named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] gateways named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] policy_engines named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] lambda_functions named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] dynamodb_tables named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] workload_identities named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] iam_roles named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] log_groups named 'harness-agentcore'/'harness_agentcore': 0
+[2026-10-30T16:31:42Z] [cleanup-check] TOTAL lingering AgentCore-rail resources: 0

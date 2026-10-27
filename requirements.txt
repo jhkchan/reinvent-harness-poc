@@ -1,0 +1,9 @@
+# botocore 1.43.36 added the lambda-microvms client (rail 6, sandbox.py).
+# The AgentCore harness lifecycle hooks (harness/agentcore.py) need a newer
+# one; this repo is built and tested with 1.43.122.
+boto3>=1.43.122
+botocore>=1.43.122
+opentelemetry-sdk>=1.20
+pytest>=7.0
+# test-only, transitive via pytest; the floor clears PYSEC-2023-117 and PYSEC-2026-2987
+pygments>=2.20.0

@@ -1,0 +1,7 @@
+[2026-10-26T17:35:53Z] cleanup_check() region=us-east-1 after run harness-sandbox-22b8555212
+[2026-10-26T17:35:54Z] [cleanup-check] microvms with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:54Z] [cleanup-check] images with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:54Z] [cleanup-check] iam_roles with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:54Z] [cleanup-check] s3_buckets with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:54Z] [cleanup-check] log_groups with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:54Z] [cleanup-check] TOTAL lingering 'harness-sandbox' resources: 0

@@ -1,0 +1,31 @@
+[2026-10-26T17:31:18Z] rail 6 (the stall): run AI-written code in a MicroVM region=us-east-1 run=harness-sandbox-22b8555212
+[2026-10-26T17:31:19Z] [s3] created bucket harness-sandbox-22b8555212; uploaded sandbox/code.zip (1230 bytes: Dockerfile + app.py)
+[2026-10-26T17:31:19Z] [iam] created role harness-sandbox-build-22b8555212 (trust lambda.amazonaws.com, aws:SourceAccount=<account-id>; s3 zip read, ecr-public token, logs on /aws/lambda-microvms/harness-sandbox-22b8555212 only) -> arn:aws:iam::<account-id>:role/harness-sandbox/harness-sandbox-build-22b8555212
+[2026-10-26T17:31:20Z] [iam] created role harness-sandbox-exec-22b8555212 (trust lambda.amazonaws.com, aws:SourceAccount=<account-id>; NO permission policy) -> arn:aws:iam::<account-id>:role/harness-sandbox/harness-sandbox-exec-22b8555212
+[2026-10-26T17:31:20Z] [iam] waiting 10s for role propagation
+[2026-10-26T17:31:30Z] [image] CreateMicrovmImage arn:aws:lambda:us-east-1:<account-id>:microvm-image:harness-sandbox-22b8555212 version=1.0 state=CREATING
+[2026-10-26T17:31:30Z] [build] buildId=2da3c603-2123-446f-9c79-f6c604ecfad1 state=IN_PROGRESS
+[2026-10-26T17:34:32Z] [build] buildId=2da3c603-2123-446f-9c79-f6c604ecfad1 state=SUCCESSFUL
+[2026-10-26T17:34:32Z] [microvm] RunMicrovm microvm-6c7ef683-7759-3149-bcc2-0b53fb110bfa state=PENDING maxDuration=900s
+[2026-10-26T17:34:37Z] [microvm] state=RUNNING
+[2026-10-26T17:34:38Z] [exec] POST /exec on the microVM endpoint (headers: X-aws-proxy-auth, X-aws-proxy-port=8080)
+[2026-10-26T17:34:38Z] [exec] code sha256=a41fc8c622bee045724403fa78a3d5fc935600b310db0911c2b59523cd624152 bytes=22 (text not logged)
+[2026-10-26T17:34:39Z] [exec] HTTP 200 after 1 attempt(s) -> returncode=0 stdout_len=3 stderr_len=0
+[2026-10-26T17:34:39Z] [teardown] TerminateMicrovm microvm-6c7ef683-7759-3149-bcc2-0b53fb110bfa
+[2026-10-26T17:34:44Z] [teardown] microVM state=TERMINATED
+[2026-10-26T17:34:44Z] [teardown] DeleteMicrovmImage arn:aws:lambda:us-east-1:<account-id>:microvm-image:harness-sandbox-22b8555212
+[2026-10-26T17:35:50Z] [teardown] image gone
+[2026-10-26T17:35:51Z] [teardown] deleted s3://harness-sandbox-22b8555212/sandbox/code.zip and bucket
+[2026-10-26T17:35:51Z] [teardown] deleted IAM role harness-sandbox-build-22b8555212
+[2026-10-26T17:35:51Z] [teardown] deleted IAM role harness-sandbox-exec-22b8555212
+[2026-10-26T17:35:52Z] [teardown] deleted log group /aws/lambda-microvms/harness-sandbox-22b8555212
+[2026-10-26T17:35:53Z] [cleanup-check] microvms with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:53Z] [cleanup-check] images with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:53Z] [cleanup-check] iam_roles with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:53Z] [cleanup-check] s3_buckets with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:53Z] [cleanup-check] log_groups with prefix 'harness-sandbox': 0
+[2026-10-26T17:35:53Z] [cleanup-check] TOTAL lingering 'harness-sandbox' resources: 0
+[2026-10-26T17:35:53Z] [result] allowed=True passed=True returncode=0 stdout_len=3 expected_output_matched=True
+[2026-10-26T17:35:53Z] [result] reason=ran in an isolated MicroVM
+[2026-10-26T17:35:53Z] [result] teardown clean=True duration=275s
+[2026-10-26T17:35:54Z] [summary] OK: code ran in a MicroVM and 0 'harness-sandbox' resources remain
